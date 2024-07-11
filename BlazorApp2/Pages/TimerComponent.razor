@@ -1,0 +1,174 @@
+﻿@page "/"
+
+<PageTitle>Timer</PageTitle>
+
+<div class="timer-container">
+    <svg class="progress-circle" width="200" height="200" viewBox="0 0 200 200">
+        <circle class="progress-bg" cx="100" cy="100" r="90"></circle>
+        <circle class="progress-bar" cx="100" cy="100" r="90"
+                style="stroke-dasharray:@Circumference; stroke-dashoffset:@(Circumference - (Circumference * progressValue / 100))"></circle>
+        <foreignObject x="50" y="85" width="100" height="30">
+            <div xmlns="http://www.w3.org/1999/xhtml" class="progress-text">
+                @if (timerEnabled)
+                {
+                    <span>@qolganvaqt</span>
+                }
+                else
+                {
+                    <div style="display: flex; ">
+                        <input type="number" min="0" max="23" @bind="Hours" style="width: 30px; text-align: center;" />:
+                        <input type="number" min="0" max="59" @bind="Minutes" style="width: 30px; text-align: center;" />:
+                        <input type="number" min="0" max="59" @bind="Seconds" style="width: 30px; text-align: center;" />
+                    </div>
+                }
+            </div>
+        </foreignObject>
+    </svg>
+
+    <div class="controls-container">
+        <button class="btn btn-primary" @onclick="ToggleTimer">
+            @if (timerEnabled)
+            {
+                <i class="bi bi-pause-fill">Pause</i>
+            }
+            else
+            {
+                <i class="bi bi-play-fill">Play</i>
+            }
+        </button>
+        <button class="btn btn-primary" @onclick="Reset">Reset</button>
+    </div>
+</div>
+
+@code {
+    private const double Circumference = 2 * Math.PI * 90;
+
+    private System.Timers.Timer timer;
+    private bool timerEnabled = false;
+    private double remainingTime;
+    private double TimerDuration { get; set; }
+    private int progressValue = 100;
+
+    private int Hours { get; set; }
+    private int Minutes { get; set; }
+    private int Seconds { get; set; }
+    private string qolganvaqt => TimeSpan.FromSeconds(remainingTime).ToString(@"hh\:mm\:ss");
+
+    private void ToggleTimer()
+    {
+        timerEnabled = !timerEnabled;
+
+        if (timerEnabled)
+        {
+            remainingTime = Hours * 3600 + Minutes * 60 + Seconds;
+            TimerDuration = remainingTime;
+            timer = new System.Timers.Timer(1000);
+            timer.Elapsed += TimerElapsed;
+            timer.Start();
+        }
+        else
+        {
+            timer.Stop();
+        }
+    }
+
+    private void Reset()
+    {
+        timerEnabled = false;
+        Hours = 0;
+        Minutes = 0;
+        Seconds = 0;
+        remainingTime = 0;
+        progressValue = 100;
+        timer?.Stop();
+        InvokeAsync(StateHasChanged);
+    }
+
+    private void TimerElapsed(object sender, System.Timers.ElapsedEventArgs e)
+    {
+        if (remainingTime > 0)
+        {
+            remainingTime--;
+            progressValue = (int)((remainingTime / TimerDuration) * 100);
+            InvokeAsync(StateHasChanged);
+        }
+        else
+        {
+            timer.Stop();
+            timerEnabled = false;
+
+            InvokeAsync(StateHasChanged);
+        }
+    }
+}
+
+
+
+<style>
+    .timer-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 100vh;
+        margin-bottom: 100px;
+    }
+
+
+    .progress-bg {
+        fill: none;
+        stroke: #e0e0e0;
+        stroke-width: 18;
+    }
+
+    .progress-bar {
+        fill: none;
+        stroke: #76c7c0;
+        stroke-width: 18;
+        stroke-linecap: round;
+        transition: stroke-dashoffset 0.5s;
+    }
+
+    .progress-text {
+        font-size: 2em;
+        fill: white;
+        font-weight: bold;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height:75%;
+        font-size: 25px;
+    }
+
+    .controls-container {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        margin-top: 25px;
+    }
+
+    .btn {
+        font-size: 1em;
+    }
+
+    input[type=number] {
+        background: none;
+        color: white;
+        font-size: 1em;
+        border: none;
+        border-bottom: 1px solid black;
+        text-align: center;
+        width: 40px;
+    }
+
+        input[type=number]::-webkit-inner-spin-button,
+        input[type=number]::-webkit-outer-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+        input[type=number]:focus {
+            outline: none;
+        }
+</style>
