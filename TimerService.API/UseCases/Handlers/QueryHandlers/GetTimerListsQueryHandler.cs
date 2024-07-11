@@ -17,9 +17,18 @@ namespace TimerService.API.UseCases.Handlers.QueryHandlers
 
         public async Task<List<TimerList>> Handle(GetTimerListsQuery request, CancellationToken cancellationToken)
         {
-            var timeList = await _appDbContext.TimerLists.ToListAsync(cancellationToken);
+            try
+            {
+                var timeList = await _appDbContext.TimerLists.ToListAsync(cancellationToken);
 
-            return timeList;
+
+                return timeList;
+            }
+            catch (Exception ex)
+            {
+
+                return null!;
+            }
         }
     }
 }

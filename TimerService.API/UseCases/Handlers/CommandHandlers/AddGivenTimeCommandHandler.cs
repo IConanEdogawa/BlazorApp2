@@ -16,23 +16,38 @@ namespace TimerService.API.UseCases.Handlers.CommandHandlers
 
         public async Task<ResponseModel> Handle(AddGivenTimeCommand request, CancellationToken cancellationToken)
         {
-            var time = new TimerList()
+            try
             {
-                Id = Guid.NewGuid(),
-                Given = request.Given,
-                When = request.When,
-                Then = request.When
-            };
+                var time = new TimerList
+                {
+                    Id = Guid.NewGuid(),
+                    Given = request.Given,
+                    When = request.When,
+                    Then = request.When
+                };
 
-            await _appDbContext.TimerLists.AddAsync(time);
-            await _appDbContext.SaveChangesAsync(cancellationToken);
+                await _appDbContext.TimerLists.AddAsync(time, cancellationToken);
+                await _appDbContext.SaveChangesAsync(cancellationToken);
 
-            return new ResponseModel()
+
+
+                return new ResponseModel
+                {
+                    Message = "Timer list added successfully!",
+                    StatusCode = 200,
+                    IsSuccess = true
+                };
+            }
+            catch (Exception ex)
             {
-                Message = "Timer list added succsessfully !",
-                StatusCode = 200,
-                IsSuccess = true
-            };
+
+                return new ResponseModel
+                {
+                    Message = "Failed to add timer list.",
+                    StatusCode = 500,
+                    IsSuccess = false
+                };
+            }
         }
     }
 }
