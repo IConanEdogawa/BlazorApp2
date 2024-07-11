@@ -1,0 +1,126 @@
+﻿@page "/counter"
+
+<PageTitle>Timer</PageTitle>
+
+<svg class="progress-circle" width="200" height="200" viewBox="0 0 200 200">
+    <circle class="progress-bg" cx="100" cy="100" r="90"></circle>
+    <circle class="progress-bar" cx="100" cy="100" r="90"
+            style="stroke-dasharray:@Circumference; stroke-dashoffset:@(Circumference - (Circumference * progressValue / 100))"></circle>
+    <text x="100" y="110" text-anchor="middle" class="progress-text">@qolganvaqt</text>
+</svg>
+
+<label style="color:white;" for="timerInput">Set Timer (seconds):</label>
+<input id="timerInput" type="number" class="form-control" @bind="TimerDuration" />
+
+<button class="btn btn-primary" @onclick="ToggleTimer">
+    @if (timerEnabled)
+    {
+        <i class="bi bi-pause-fill">Pause</i>
+    }
+    else
+    {
+        <i class="bi bi-play-fill">Play</i>
+    }
+</button>
+<button class="btn btn-primary" @onclick="Reset">Reset</button>
+
+@code {
+    private const double Circumference = 2 * Math.PI * 90;
+
+    private System.Timers.Timer timer;
+    private DateTime startTime;
+    private bool timerEnabled = false;
+    private int TimerDuration { get; set; } = 60;
+    private double remainingTime;
+    private int progressValue = 100;
+    private string qolganvaqt => TimeSpan.FromSeconds(remainingTime).ToString(@"mm\:ss");
+
+    private void ToggleTimer()
+    {
+        timerEnabled = !timerEnabled;
+
+        if (timerEnabled)
+        {
+            startTime = DateTime.Now;
+            remainingTime = TimerDuration;
+            timer = new System.Timers.Timer(1000);
+            timer.Elapsed += TimerElapsed;
+            timer.Start();
+        }
+        else
+        {
+            timer.Stop();
+        }
+    }
+
+    private void Reset()
+    {
+        timerEnabled = false;
+        remainingTime = TimerDuration;
+        progressValue = 100;
+        timer?.Stop();
+        InvokeAsync(() => StateHasChanged());
+    }
+
+    private void TimerElapsed(object sender, System.Timers.ElapsedEventArgs e)
+    {
+        if (remainingTime > 0)
+        {
+            remainingTime--;
+            progressValue = (int)((remainingTime / TimerDuration) * 100);
+            InvokeAsync(() => StateHasChanged());
+        }
+        else
+        {
+            timer.Stop();
+            timerEnabled = false;
+            InvokeAsync(() => StateHasChanged());
+        }
+    }
+}
+
+
+<style>
+    .timer-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 100vh;
+    }
+
+    .progress-circle {
+        margin-bottom: 20px;
+        /* transform: rotate(-90deg); */
+    }
+
+    .progress-bg {
+        fill: none;
+        stroke: #e0e0e0;
+        stroke-width: 18;
+    }
+
+    .progress-bar {
+        fill: none;
+        stroke: #76c7c0;
+        stroke-width: 18;
+        stroke-linecap: round;
+        transition: stroke-dashoffset 0.5s;
+    }
+
+    .progress-text {
+        font-size: 2em;
+        fill: white;
+        font-weight: bold;
+    }
+
+    .controls-container {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .btn {
+        font-size: 1em;
+    }
+</style>
