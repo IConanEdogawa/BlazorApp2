@@ -13,17 +13,46 @@
                 {
                     <span>@qolganvaqt</span>
                 }
-                else
+                else if (timer == null || timerEnabled)
                 {
-                    <div style="display: flex; ">
+                    <div style="display: flex; justify-content: center;">
                         <input type="number" min="0" max="23" @bind="Hours" style="width: 30px; text-align: center;" />:
                         <input type="number" min="0" max="59" @bind="Minutes" style="width: 30px; text-align: center;" />:
                         <input type="number" min="0" max="59" @bind="Seconds" style="width: 30px; text-align: center;" />
                     </div>
                 }
+                else
+                {
+                    <span>@qolganvaqt</span>
+                }
             </div>
         </foreignObject>
     </svg>
+
+    <div class="start-end">
+        <div class="start">
+        @if(timer == null){
+            <p>Started time</p>
+        }
+        else
+        {
+            @Started.ToString(@"hh\:mm\:ss");
+            
+        }
+    </div>
+        <div class="end">
+        @if(timer == null)
+        {
+            <p>Ends at</p>
+        }
+        else
+        {
+            @Started.ToString(@"hh\:mm\:ss");
+            
+            
+        }
+    </div>
+    </div>
 
     <div class="controls-container">
         <button class="btn btn-primary" @onclick="ToggleTimer">
@@ -46,8 +75,12 @@
     private System.Timers.Timer timer;
     private bool timerEnabled = false;
     private double remainingTime;
-    private double TimerDuration { get; set; }
+    private double TimerDuration { get; set; } = 0;
     private int progressValue = 100;
+
+    private DateTime Started { get; set; }
+    private DateTime Ends { get; set; } 
+
 
     private int Hours { get; set; }
     private int Minutes { get; set; }
@@ -60,15 +93,25 @@
 
         if (timerEnabled)
         {
-            remainingTime = Hours * 3600 + Minutes * 60 + Seconds;
-            TimerDuration = remainingTime;
+            if (timer == null)
+            {
+                remainingTime = Hours * 3600 + Minutes * 60 + Seconds;
+                TimerDuration = remainingTime;
+                Started = DateTime.UtcNow;
+                Ends = DateTime.UtcNow.AddSeconds(remainingTime);
+            }
+
             timer = new System.Timers.Timer(1000);
             timer.Elapsed += TimerElapsed;
+            Ends = DateTime.UtcNow.AddSeconds(remainingTime);
             timer.Start();
         }
         else
         {
-            timer.Stop();
+            if (timer != null)
+            {
+                timer.Stop();
+            }
         }
     }
 
@@ -81,6 +124,7 @@
         remainingTime = 0;
         progressValue = 100;
         timer?.Stop();
+        timer = null!;
         InvokeAsync(StateHasChanged);
     }
 
@@ -96,7 +140,9 @@
         {
             timer.Stop();
             timerEnabled = false;
-
+            TimerDuration = remainingTime;
+            timer = null!;
+            progressValue = 100;
             InvokeAsync(StateHasChanged);
         }
     }
@@ -105,6 +151,28 @@
 
 
 <style>
+
+    .start-end{
+        
+        align-items: center;
+        justify-content: space-between;
+        display: flex;
+    }
+
+    .start{
+        border: 2px solid white;
+        padding: 10px;
+        border-radius: 30px;
+        margin-right: 10px;
+    }
+
+    .end{
+        border: 2px solid white;
+        padding: 10px;
+        border-radius: 30px;
+        margin-left: 10px;
+    }
+
     .timer-container {
         display: flex;
         flex-direction: column;
