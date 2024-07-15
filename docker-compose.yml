@@ -6,8 +6,9 @@ services:
     build:
       context: .
       dockerfile: TimerService.API/Dockerfile
+
   blazorapp2:
     image: ${DOCKER_REGISTRY-}blazorapp2
     build:
-        context: .
-        dockerfile: BlazorApp2/Dockerfile
+      context: .
+      dockerfile: BlazorApp2/Dockerfile
