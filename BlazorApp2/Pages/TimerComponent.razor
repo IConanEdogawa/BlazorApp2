@@ -1,4 +1,7 @@
 ﻿@page "/"
+@using BlazorApp2.Services
+@using TimerService.API.Models
+@inject HttpClientService HttpClientService
 
 <PageTitle>Timer</PageTitle>
 
@@ -31,27 +34,27 @@
 
     <div class="start-end">
         <div class="start">
-        @if(timer == null){
-            <p>Started time</p>
-        }
-        else
-        {
-            @Started.ToString(@"hh\:mm\:ss");
-            
-        }
-    </div>
+            @if (timer == null)
+            {
+                <p>Started time</p>
+            }
+            else
+            {
+                @Started.ToString(@"hh\:mm\:ss")
+                ;
+            }
+        </div>
         <div class="end">
-        @if(timer == null)
-        {
-            <p>Ends at</p>
-        }
-        else
-        {
-            @Started.ToString(@"hh\:mm\:ss");
-            
-            
-        }
-    </div>
+            @if (timer == null)
+            {
+                <p>Ends at</p>
+            }
+            else
+            {
+                @Ends.ToString(@"hh\:mm\:ss")
+                ;
+            }
+        </div>
     </div>
 
     <div class="controls-container">
@@ -69,6 +72,31 @@
     </div>
 </div>
 
+<div class="timer-table-container">
+    <table class="timer-table">
+        <thead>
+            <tr>
+                <th>Given</th>
+                <th>When</th>
+                <th>Ends</th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (timers != null)
+            {
+                @foreach (var timer in timers)
+                {
+                    <tr>
+                        <td>@timer.Given</td>
+                        <td>@timer.When</td>
+                        <td>@timer.Then</td>
+                    </tr>
+                }
+            }
+        </tbody>
+    </table>
+</div>
+
 @code {
     private const double Circumference = 2 * Math.PI * 90;
 
@@ -79,13 +107,24 @@
     private int progressValue = 100;
 
     private DateTime Started { get; set; }
-    private DateTime Ends { get; set; } 
-
+    private DateTime Ends { get; set; }
+    private List<TimerList> timers;
 
     private int Hours { get; set; }
     private int Minutes { get; set; }
     private int Seconds { get; set; }
     private string qolganvaqt => TimeSpan.FromSeconds(remainingTime).ToString(@"hh\:mm\:ss");
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadTimers();
+    }
+
+    private async Task LoadTimers()
+    {
+        timers = await HttpClientService.GetAllTimersAsync();
+        InvokeAsync(StateHasChanged);
+    }
 
     private void ToggleTimer()
     {
@@ -128,7 +167,7 @@
         InvokeAsync(StateHasChanged);
     }
 
-    private void TimerElapsed(object sender, System.Timers.ElapsedEventArgs e)
+    private async void TimerElapsed(object sender, System.Timers.ElapsedEventArgs e)
     {
         if (remainingTime > 0)
         {
@@ -143,30 +182,48 @@
             TimerDuration = remainingTime;
             timer = null!;
             progressValue = 100;
+            await PostTimerData();
+            await LoadTimers();
             InvokeAsync(StateHasChanged);
+        }
+    }
+
+    private async Task PostTimerData()
+    {
+        var timerData = new TimerList
+        {
+                Given = $"{Hours}:{Minutes}:{Seconds}",
+                When = Started.ToString(@"hh\:mm\:ss"),
+                Then = Started.AddSeconds(Hours * 3600 + Minutes * 60 + Seconds).ToString(@"hh\:mm\:ss")
+        };
+
+        var response = await HttpClientService.PostTimerDataAsync(timerData);
+        if (response.IsSuccess)
+        {
+            Console.WriteLine("Successful !");
+        }
+        else
+        {
+            Console.WriteLine("Unsuccessful !");
         }
     }
 }
 
-
-
 <style>
-
-    .start-end{
-        
+    .start-end {
         align-items: center;
         justify-content: space-between;
         display: flex;
     }
 
-    .start{
+    .start {
         border: 2px solid white;
         padding: 10px;
         border-radius: 30px;
         margin-right: 10px;
     }
 
-    .end{
+    .end {
         border: 2px solid white;
         padding: 10px;
         border-radius: 30px;
@@ -181,7 +238,6 @@
         height: 100vh;
         margin-bottom: 100px;
     }
-
 
     .progress-bg {
         fill: none;
@@ -204,7 +260,7 @@
         display: flex;
         justify-content: center;
         align-items: center;
-        height:75%;
+        height: 75%;
         font-size: 25px;
     }
 
@@ -230,13 +286,35 @@
         width: 40px;
     }
 
-        input[type=number]::-webkit-inner-spin-button,
-        input[type=number]::-webkit-outer-spin-button {
-            -webkit-appearance: none;
-            margin: 0;
-        }
+    input[type=number]::-webkit-inner-spin-button,
+    input[type=number]::-webkit-outer-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+    }
 
-        input[type=number]:focus {
-            outline: none;
-        }
+    input[type=number]:focus {
+        outline: none;
+    }
+
+    body {
+        background-color: black;
+        color: white;
+    }
+
+    .timer-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .timer-table th,
+    .timer-table td {
+        border-top: 1px solid white;
+        border-bottom: 1px solid white;
+        padding: 8px;
+        text-align: left;
+    }
+
+    .timer-table th {
+        background-color: #1a1a1a;
+    }
 </style>

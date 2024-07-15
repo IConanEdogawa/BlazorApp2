@@ -23,7 +23,7 @@ namespace TimerService.API.UseCases.Handlers.CommandHandlers
                     Id = Guid.NewGuid(),
                     Given = request.Given,
                     When = request.When,
-                    Then = request.When
+                    Then = request.Then
                 };
 
                 await _appDbContext.TimerLists.AddAsync(time, cancellationToken);

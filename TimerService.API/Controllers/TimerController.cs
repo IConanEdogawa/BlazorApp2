@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using TimerService.API.UseCases.Commands;
 using TimerService.API.UseCases.Queries;
+using System.Threading.Tasks;
 
 namespace TimerService.API.Controllers
 {
@@ -27,7 +28,17 @@ namespace TimerService.API.Controllers
         [HttpGet]
         public async Task<IActionResult> GetTimerList()
         {
+            
             var result = await _mediator.Send(new GetTimerListsQuery());
+
+            return Ok(result);
+        }
+
+        [HttpDelete]
+        public async Task<IActionResult> DeleteGivenTime(RemoveGivenTimeCommand command)
+        {
+            var result = await _mediator.Send(command);
+
             return Ok(result);
         }
     }
