@@ -8,8 +8,12 @@ namespace TimerService.API.Persistance
     {
         public AppDbContext(DbContextOptions<AppDbContext> options) : base(options)
         {
-
+            
         }
         public DbSet<TimerList> TimerLists { get; set; }
+        public void ApplyMigrations()
+        {
+            this.Database.Migrate();
+        }
     }
 }
